@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import { IProduct } from './Product';
+import type { IProduct } from './Product.js';
 
 export type OfferType = 'bundle' | 'discount';
 
