@@ -4,7 +4,12 @@ import { User, Product, Order, CartItem, AdminOrder, Offer, InventoryOffer } fro
 export type { AdminOrder };
 
 // API base URL - will be set from environment variable
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = rawApiUrl.includes('://')
+  ? rawApiUrl
+  : rawApiUrl.startsWith('localhost') || rawApiUrl.startsWith('127.0.0.1')
+    ? `http://${rawApiUrl}`
+    : `https://${rawApiUrl}`;
 
 // Token management
 const TOKEN_KEY = 'aura_auth_token';
@@ -612,5 +617,4 @@ export const usersApi = {
     }
   },
 };
-
 
