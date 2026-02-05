@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import Offer from '../models/Offer';
-import InventoryOffer from '../models/InventoryOffer';
-import { authenticateToken, requireAdmin } from '../middleware/auth';
+import Offer from '../models/Offer.js';
+import InventoryOffer from '../models/InventoryOffer.js';
+import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 import multer from 'multer';
 import fs from 'fs/promises';
 import path from 'path';
