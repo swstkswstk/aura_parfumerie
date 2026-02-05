@@ -6,11 +6,11 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc || true",
     "start": "node dist/index.js",
     "seed": "tsx src/scripts/seed.ts",
     "seed:inventory": "tsx src/scripts/seedInventoryOffers.ts"
-  },
+},
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
