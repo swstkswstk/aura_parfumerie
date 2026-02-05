@@ -31,6 +31,10 @@ const generateToken = (userId: string, identifier: string, role: string): string
   );
 };
 
+const isDemoOtpMode = (): boolean => {
+  return process.env.OTP_DEMO_MODE === 'true';
+};
+
 // Normalize phone number (remove spaces, ensure +91 prefix for India)
 const normalizePhone = (phone: string): string => {
   // Remove all spaces, dashes, and parentheses
@@ -96,6 +100,14 @@ router.post('/send-otp', async (req: Request, res: Response): Promise<void> => {
     }
 
     await user.save();
+
+    if (isDemoOtpMode()) {
+      res.json({
+        message: 'OTP sent successfully (demo mode)',
+        demoCode: otp,
+      });
+      return;
+    }
 
     // Send OTP email
     const emailResult = await sendOTPEmail(email, otp);
@@ -166,6 +178,14 @@ router.post('/send-otp-phone', async (req: Request, res: Response): Promise<void
     }
 
     await user.save();
+
+    if (isDemoOtpMode()) {
+      res.json({
+        message: 'OTP sent to your phone (demo mode)',
+        demoCode: otp,
+      });
+      return;
+    }
 
     // DEMO MODE: Log OTP to console instead of sending SMS
     console.log('========================================');
