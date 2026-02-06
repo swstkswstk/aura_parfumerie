@@ -30,15 +30,11 @@ const userSchema = new Schema<IUser>(
   {
     email: {
       type: String,
-      sparse: true, // Allow null/undefined but enforce uniqueness when present
-      unique: true,
       lowercase: true,
       trim: true,
     },
     phone: {
       type: String,
-      sparse: true, // Allow null/undefined but enforce uniqueness when present
-      unique: true,
       trim: true,
     },
     name: {
@@ -84,7 +80,15 @@ userSchema.pre('save', function(next) {
   }
 });
 
-// Note: Indexes for email and phone are already created by unique: true + sparse: true in schema
+// Unique indexes only when the field exists to allow email-only or phone-only users
+userSchema.index(
+  { email: 1 },
+  { unique: true, partialFilterExpression: { email: { $type: 'string' } } }
+);
+userSchema.index(
+  { phone: 1 },
+  { unique: true, partialFilterExpression: { phone: { $type: 'string' } } }
+);
 
 export const User = mongoose.model<IUser>('User', userSchema);
 export default User;

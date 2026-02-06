@@ -41,14 +41,19 @@ router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void>
       category: product.category,
       notes: product.notes,
       image: product.image,
-      variants: product.variants.map((variant) => ({
-        id: variant._id.toString(),
-        name: variant.name,
-        type: variant.type,
-        price: variant.price,
-        stock: variant.stock,
-        sku: variant.sku,
-      })),
+      variants: (product.variants || [])
+        .filter(Boolean)
+        .map((variant, index) => ({
+          id:
+            (variant as { _id?: mongoose.Types.ObjectId })._id?.toString() ||
+            variant.sku ||
+            `${product._id.toString()}-${index}`,
+          name: variant.name,
+          type: variant.type,
+          price: variant.price,
+          stock: variant.stock,
+          sku: variant.sku,
+        })),
     }));
 
     res.json({ products: formattedProducts });
@@ -78,14 +83,19 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
         category: product.category,
         notes: product.notes,
         image: product.image,
-        variants: product.variants.map((variant) => ({
-          id: variant._id.toString(),
-          name: variant.name,
-          type: variant.type,
-          price: variant.price,
-          stock: variant.stock,
-          sku: variant.sku,
-        })),
+        variants: (product.variants || [])
+          .filter(Boolean)
+          .map((variant, index) => ({
+            id:
+              (variant as { _id?: mongoose.Types.ObjectId })._id?.toString() ||
+              variant.sku ||
+              `${product._id.toString()}-${index}`,
+            name: variant.name,
+            type: variant.type,
+            price: variant.price,
+            stock: variant.stock,
+            sku: variant.sku,
+          })),
       },
     });
   } catch (error) {
