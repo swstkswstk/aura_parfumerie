@@ -5,6 +5,11 @@ import { Product, ProductVariant, CartItem, InventoryOffer } from '../types';
 import { inventoryOffersApi } from '../services/api';
 import { parseOffer, formatPrice } from '../utils/offerUtils';
 
+const BOUTIQUE_CATEGORIES = ['Fine Fragrance', 'Home Collection', 'Accessories'];
+const INVENTORY_CATEGORIES = ['Car Perfume', 'Personal Care'];
+const SHOP_CATEGORIES = ['All', ...BOUTIQUE_CATEGORIES, ...INVENTORY_CATEGORIES];
+const INVENTORY_CATEGORY_SET = new Set(INVENTORY_CATEGORIES);
+
 // Category icon mapping
 const getCategoryIcon = (category: string) => {
   const lower = category.toLowerCase();
@@ -45,23 +50,19 @@ export const Shop: React.FC<ShopProps> = ({ products, onAddToCart, isLoading = f
   const [selectedInventoryOffer, setSelectedInventoryOffer] = useState<InventoryOffer | null>(null);
   const [inventoryQuantity, setInventoryQuantity] = useState(1);
   const [inventoryOffers, setInventoryOffers] = useState<InventoryOffer[]>([]);
-  const [inventoryCategories, setInventoryCategories] = useState<string[]>([]);
   const [isLoadingInventory, setIsLoadingInventory] = useState(true);
 
   // Fetch inventory offers
   useEffect(() => {
     const fetchInventory = async () => {
       try {
-        const [offersResult, catResult] = await Promise.all([
-          inventoryOffersApi.getAll(),
-          inventoryOffersApi.getCategories()
-        ]);
+        const offersResult = await inventoryOffersApi.getAll();
         
         if (offersResult.success && offersResult.inventoryOffers) {
-          setInventoryOffers(offersResult.inventoryOffers);
-        }
-        if (catResult.success && catResult.categories) {
-          setInventoryCategories(catResult.categories);
+          const filteredOffers = offersResult.inventoryOffers.filter(o =>
+            INVENTORY_CATEGORY_SET.has(o.category)
+          );
+          setInventoryOffers(filteredOffers);
         }
       } catch (err) {
         console.error('Failed to fetch inventory:', err);
@@ -73,20 +74,19 @@ export const Shop: React.FC<ShopProps> = ({ products, onAddToCart, isLoading = f
   }, []);
 
   // Combine boutique categories with inventory categories
-  const boutiqueCategories = ['Fine Fragrance', 'Home Collection', 'Accessories'];
-  const allCategories = ['All', ...boutiqueCategories, ...inventoryCategories.filter(c => !boutiqueCategories.includes(c))];
+  const allCategories = SHOP_CATEGORIES;
   
   // Filter boutique products
   const filteredBoutiqueProducts = activeCategory === 'All' 
     ? products 
-    : boutiqueCategories.includes(activeCategory)
+    : BOUTIQUE_CATEGORIES.includes(activeCategory)
     ? products.filter(p => p.category === activeCategory)
     : [];
 
   // Filter inventory offers
   const filteredInventoryOffers = activeCategory === 'All'
     ? inventoryOffers
-    : inventoryCategories.includes(activeCategory)
+    : INVENTORY_CATEGORIES.includes(activeCategory)
     ? inventoryOffers.filter(o => o.category === activeCategory)
     : [];
 
@@ -171,7 +171,7 @@ export const Shop: React.FC<ShopProps> = ({ products, onAddToCart, isLoading = f
           <div className="flex sm:justify-center gap-2 sm:gap-3 overflow-x-auto px-4 sm:px-0 pb-2 sm:pb-0 scrollbar-hide sm:flex-wrap">
             {allCategories.map(cat => {
               const Icon = cat === 'All' ? Tag : 
-                          boutiqueCategories.includes(cat) ? ShoppingBag : 
+                          BOUTIQUE_CATEGORIES.includes(cat) ? ShoppingBag : 
                           getCategoryIcon(cat);
               return (
                 <button

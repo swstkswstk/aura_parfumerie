@@ -5,6 +5,9 @@ import { Product, CartItem, ViewMode, InventoryOffer } from '../types';
 import { inventoryOffersApi } from '../services/api';
 import { parseOffer, formatPrice } from '../utils/offerUtils';
 
+const LANDING_CATEGORIES = ['All', 'Fine Fragrance', 'Home Collection', 'Accessories', 'Car Perfume', 'Personal Care'];
+const INVENTORY_CATEGORY_SET = new Set(['Car Perfume', 'Personal Care']);
+
 interface LandingPageProps {
   products: Product[];
   onAddToCart: (item: CartItem) => void;
@@ -40,7 +43,6 @@ const getCategoryImage = (category: string): string => {
 
 export const LandingPage: React.FC<LandingPageProps> = ({ products, onAddToCart, onNavigate, onOpenChat }) => {
   const [inventoryOffers, setInventoryOffers] = useState<InventoryOffer[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [isLoadingOffers, setIsLoadingOffers] = useState(true);
   const [selectedInventoryOffer, setSelectedInventoryOffer] = useState<InventoryOffer | null>(null);
@@ -50,16 +52,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ products, onAddToCart,
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [offersResult, catResult] = await Promise.all([
-          inventoryOffersApi.getAll(),
-          inventoryOffersApi.getCategories()
-        ]);
+        const offersResult = await inventoryOffersApi.getAll();
         
         if (offersResult.success && offersResult.inventoryOffers) {
-          setInventoryOffers(offersResult.inventoryOffers);
-        }
-        if (catResult.success && catResult.categories) {
-          setCategories(['All', ...catResult.categories]);
+          const filteredOffers = offersResult.inventoryOffers.filter(o =>
+            INVENTORY_CATEGORY_SET.has(o.category)
+          );
+          setInventoryOffers(filteredOffers);
         }
       } catch (err) {
         console.error('Failed to fetch inventory offers:', err);
@@ -69,6 +68,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ products, onAddToCart,
     };
     fetchData();
   }, []);
+
+  const categories = LANDING_CATEGORIES;
 
   // Filter offers by category
   const filteredOffers = activeCategory === 'All'

@@ -5,6 +5,9 @@ import { InventoryOffer, CartItem } from '../types';
 import { inventoryOffersApi } from '../services/api';
 import { parseOffer, getOfferDescription, formatPrice as formatPriceUtil } from '../utils/offerUtils';
 
+const INVENTORY_CATEGORIES = ['All', 'Fine Fragrance', 'Home Collection', 'Accessories', 'Car Perfume', 'Personal Care'];
+const ALLOWED_INVENTORY_CATEGORY_SET = new Set(['Car Perfume', 'Personal Care']);
+
 interface InventoryOffersProps {
   onAddToCart: (item: CartItem) => void;
 }
@@ -41,7 +44,6 @@ const formatPrice = (value: number) =>
 
 export const InventoryOffers: React.FC<InventoryOffersProps> = ({ onAddToCart }) => {
   const [inventoryOffers, setInventoryOffers] = useState<InventoryOffer[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,16 +53,13 @@ export const InventoryOffers: React.FC<InventoryOffersProps> = ({ onAddToCart })
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Fetch categories
-        const catResult = await inventoryOffersApi.getCategories();
-        if (catResult.success && catResult.categories) {
-          setCategories(['All', ...catResult.categories]);
-        }
-
         // Fetch all offers
         const offersResult = await inventoryOffersApi.getAll();
         if (offersResult.success && offersResult.inventoryOffers) {
-          setInventoryOffers(offersResult.inventoryOffers);
+          const filteredOffers = offersResult.inventoryOffers.filter(o =>
+            ALLOWED_INVENTORY_CATEGORY_SET.has(o.category)
+          );
+          setInventoryOffers(filteredOffers);
         } else {
           setError(offersResult.error || 'Failed to load offers');
         }
@@ -74,6 +73,8 @@ export const InventoryOffers: React.FC<InventoryOffersProps> = ({ onAddToCart })
 
     fetchData();
   }, []);
+
+  const categories = INVENTORY_CATEGORIES;
 
   // Filter offers by category
   const filteredOffers = activeCategory === 'All'

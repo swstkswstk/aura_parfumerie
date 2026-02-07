@@ -5,6 +5,9 @@ import { CartItem, InventoryOffer } from '../types';
 import { inventoryOffersApi } from '../services/api';
 import { parseOffer, formatPrice, getOfferDescription } from '../utils/offerUtils';
 
+const OFFER_CATEGORIES = ['All', 'Fine Fragrance', 'Home Collection', 'Accessories', 'Car Perfume', 'Personal Care'];
+const ALLOWED_INVENTORY_CATEGORY_SET = new Set(['Car Perfume', 'Personal Care']);
+
 interface OffersProps {
   products: any[]; // Keep for compatibility but we'll use inventory offers
   onAddToCart: (item: CartItem) => void;
@@ -39,7 +42,6 @@ const getCategoryImage = (category: string): string => {
 
 export const Offers: React.FC<OffersProps> = ({ onAddToCart }) => {
   const [inventoryOffers, setInventoryOffers] = useState<InventoryOffer[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [isLoading, setIsLoading] = useState(true);
   const [selectedInventoryOffer, setSelectedInventoryOffer] = useState<InventoryOffer | null>(null);
@@ -49,20 +51,17 @@ export const Offers: React.FC<OffersProps> = ({ onAddToCart }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [offersResult, catResult] = await Promise.all([
-          inventoryOffersApi.getAll(),
-          inventoryOffersApi.getCategories()
-        ]);
+        const offersResult = await inventoryOffersApi.getAll();
 
         if (offersResult.success && offersResult.inventoryOffers) {
           // Filter only items with offers and in stock
           const withOffers = offersResult.inventoryOffers.filter(
             o => o.offer && o.offer.trim() !== '' && o.quantity > 0
           );
-          setInventoryOffers(withOffers);
-        }
-        if (catResult.success && catResult.categories) {
-          setCategories(['All', ...catResult.categories]);
+          const filteredOffers = withOffers.filter(o =>
+            ALLOWED_INVENTORY_CATEGORY_SET.has(o.category)
+          );
+          setInventoryOffers(filteredOffers);
         }
       } catch (err) {
         console.error('Failed to fetch offers:', err);
@@ -72,6 +71,8 @@ export const Offers: React.FC<OffersProps> = ({ onAddToCart }) => {
     };
     fetchData();
   }, []);
+
+  const categories = OFFER_CATEGORIES;
 
   // Filter by category
   const filteredOffers = activeCategory === 'All'
