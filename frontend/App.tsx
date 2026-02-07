@@ -254,7 +254,13 @@ const App: React.FC = () => {
 
       {currentView === 'offers' && <Offers products={products} onAddToCart={handleAddToCart} />}
 
-      {currentView === 'inventory' && <InventoryOffers onAddToCart={handleAddToCart} />}
+      {currentView === 'inventory' && (
+        <Shop 
+          products={products} 
+          onAddToCart={handleAddToCart} 
+          isLoading={isProductsLoading}
+        />
+      )}
       
       {currentView === 'journal' && <Journal />}
 
